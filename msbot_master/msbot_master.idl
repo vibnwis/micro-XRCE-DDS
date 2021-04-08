@@ -1,0 +1,9 @@
+struct msbot_master
+{
+    unsigned long index;
+    string message;
+    string name;
+    string id;
+    string dof;
+    string make;
+};
