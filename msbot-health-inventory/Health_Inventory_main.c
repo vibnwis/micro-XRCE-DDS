@@ -27,6 +27,8 @@ the Topic, so it can be useful to discretize among different topics.
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include "mytimer.h"
+
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
 #define HEALTH_INVENTORY_NUM          3
@@ -118,7 +120,7 @@ void remove_dead_parts(void){
     for (i=0; i<3; i++){
         if(!health_inv_life_status[i]) {
                 health_inv_state[i] = PART_INVENTORY_EMPTY;
-                health_inv_part_reg[i] = '\0';
+                health_inv_part_reg[i] = "";
         }
     }
 }
@@ -218,6 +220,15 @@ void on_request(
 #endif /* ifdef WIN32 */
 }
 
+void time_handler3(size_t timer_id, void * user_data)
+{
+
+    printf("****** 2000 ms timer expired *******\n");
+    printf("2000 ms timer expired. (%ld)\n", timer_id);
+    decrement_life_status();
+    remove_dead_parts();
+}
+
 int main(
         int args,
         char** argv)
@@ -300,6 +311,14 @@ int main(
     uint16_t read_data_req =
             uxr_buffer_request_data(&session, reliable_out, replier_id, reliable_in, &delivery_control);
 
+    // timer callback routine
+
+    size_t timer1, timer2, timer3;
+
+    initialize();
+
+    timer3 = start_timer(2000, time_handler3, TIMER_PERIODIC, NULL);
+
     // Read request
     bool connected = true;
     while (connected)
@@ -307,6 +326,10 @@ int main(
         uint8_t read_data_status;
         connected = uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req, &read_data_status, 1);
     }
+
+    stop_timer(timer3);
+
+    finalize();
 
     return 0;
 }
