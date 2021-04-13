@@ -89,6 +89,22 @@ void on_reply(
 #endif /* ifdef WIN32 */
 }
 
+void read gpio_input(void) {
+
+    if (read_gpio(0))
+      printf("reading gpio 0 succeeded \n");
+
+    if(read_gpio(1))
+        printf("reading gpio 1 succeeded \n");;
+
+    if(read_gpio(2))
+        printf("reading gpio 2 succeeded \n");;
+
+    if(read_gpio(3))
+        printf("reading gpio 3 succeeded \n");;
+}
+
+
 
 
 int main(
@@ -238,6 +254,21 @@ int main(
     uint16_t read_data_req = uxr_buffer_request_data(&session, reliable_out, requester_id, reliable_in,
                     &delivery_control);
 
+    // setup NUMATO USBGPIO8
+    setup_USBGPIO8();
+
+    //Set GPIO 0-3 input
+    iodir_gpio_input(0);
+    iodir_gpio_input(1);
+    iodir_gpio_input(2);
+    iodir_gpio_input(3);
+
+     //Set GPIO 4-7 as output
+    iodir_gpio_output(4);
+    iodir_gpio_output(5);
+    iodir_gpio_output(6);
+    iodir_gpio_output(7);
+
     // Write requests
     bool connected = true;
     uint32_t count = 0;
@@ -268,5 +299,6 @@ int main(
         ++count;
     }
 
+    remove_USBGPIO8();
     return 0;
 }

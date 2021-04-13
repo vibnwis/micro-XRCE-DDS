@@ -32,6 +32,16 @@ void setup_USBGPIO8(void){
     tcsetattr(fd, TCSANOW, &options);
 }
 
+void remove_USBGPIO8(void){
+
+    if (fd > 0)
+    {
+        close(fd);
+        printf("close /dev/ttyACM0\n");
+    }
+
+}
+
 bool set_gpio (uint8_t gpio_num){
 
    char numeto_command[80];
@@ -74,6 +84,8 @@ bool read_gpio(uint8_t gpio_num){
 
    char numeto_command[80];
    bool status = false;
+   int res = 0;
+   char buf[255];
 
    if (gpio_num >= 0 && gpio_num <=7) {
 
@@ -83,7 +95,12 @@ bool read_gpio(uint8_t gpio_num){
             printf("Write error - %s \n", strerror(errno));
             exit (1);
         }
-        status = true;
+
+        if ((res = read(fd,buf,255)) > 0) {
+            int temp = atoi(buf);
+            printf("result len = %d GPIO-%d = %d \n", res, gpio_num. temp);
+            status = true;
+        }
     }
 
     return status;
