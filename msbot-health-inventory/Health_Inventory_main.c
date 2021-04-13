@@ -52,12 +52,21 @@ char *descriptions[HEALTH_INVENTORY_NUM] = {"Light Sensor", "Motor driver", "Tog
 char *specifications[HEALTH_INVENTORY_NUM] = {"5V", "5V", "5V"};
 char *resolutions[HEALTH_INVENTORY_NUM] = {"tbd", "tbd", "tbd"};
 
-
-//char *health_inv_part_reg[HEALTH_INVENTORY_NUM] = {'\0', '\0', '\0'};
 char *health_inv_part_reg[HEALTH_INVENTORY_NUM] = {"", "", ""};
 uint8_t health_inv_state[HEALTH_INVENTORY_NUM] = {PART_INVENTORY_EMPTY, PART_INVENTORY_EMPTY, PART_INVENTORY_EMPTY};
 uint8_t health_inv_life_status[HEALTH_INVENTORY_NUM] = {LIFE_NOT_RESPONSIVE, LIFE_NOT_RESPONSIVE, LIFE_NOT_RESPONSIVE};
 
+bool g_lock = false;
+
+
+void set_glock(void){
+   while (g_lock);
+   g_lock = true;
+}
+
+void clear_glock(void) {
+   g_lock = false;
+}
 
 uint8_t match_reg_file(char *rev_partname){
 
@@ -67,12 +76,14 @@ uint8_t match_reg_file(char *rev_partname){
     int8_t i = 0;
     for (i=0; i<3; i++){
         printf("[%d] Matching rev_partnum: %s  partnum in reg %s \n", i, rev_partname, partname[i]);
-        if (strlen(health_inv_part_reg[i]) == 0)
-           continue;
+        if (strlen(health_inv_part_reg[i]) == 0) {
+           //continue;
+           printf("health_inv_part_reg[%d] empty \n", i);
+        }
         else if (!strcmp(rev_partname, health_inv_part_reg[i])) {
-          found = true;
-          idx_pos = i;
-          break;
+           found = true;
+           idx_pos = i;
+           break;
         }
     }
     return idx_pos;
@@ -100,28 +111,34 @@ void decrement_life_status(void){
  /* match a partname in the master health inventory */
     int8_t i = 0;
     for (i=0; i<3; i++){
+        set_glock();
         if (health_inv_life_status[i]) {
             health_inv_life_status[i]--;
         }
+        clear_glock();
     }
 }
 
 void rewrite_part_status(uint8_t pos){
 
  /* match a partname in the master health inventory */
+    set_glock();
     if (health_inv_state[pos] == PART_INVENTORY_NEW_PART){
        health_inv_state[pos] = PART_INVENTORY_HEARTBEAT;
     }
     health_inv_life_status[pos] = LIFE_VERY_RESPONSIVE;
+    clear_glock();
 }
 
 void remove_dead_parts(void){
     int8_t i = 0;
     for (i=0; i<3; i++){
+        set_glock();
         if(!health_inv_life_status[i]) {
                 health_inv_state[i] = PART_INVENTORY_EMPTY;
                 health_inv_part_reg[i] = "";
         }
+        clear_glock();
     }
 }
 
@@ -129,12 +146,15 @@ void remove_dead_parts(void){
 void reg_new_part(char *rev_partname){
     int8_t i = 0;
     for (i=0; i<3; i++){
+        set_glock();
         if( !health_inv_life_status[i] && strlen(health_inv_part_reg[i]) == 0) {
             health_inv_state[i] = PART_INVENTORY_NEW_PART;
             health_inv_life_status[i] = LIFE_VERY_RESPONSIVE;
             health_inv_part_reg[i] = rev_partname;
      //       strcpy(health_inv_part_reg[i], rev_partname);
+            i=4;  // use break will exit and skiping the following clear_glock()
         }
+        clear_glock();
     }
 }
 
@@ -223,10 +243,14 @@ void on_request(
 void time_handler3(size_t timer_id, void * user_data)
 {
 
-    printf("****** 2000 ms timer expired *******\n");
+
     printf("2000 ms timer expired. (%ld)\n", timer_id);
+    printf("b4-health_inv_life_status[%d][%d][%d]\n", health_inv_life_status[0],health_inv_life_status[1],health_inv_life_status[2] );
+    printf("b4-health_inv_state[%d][%d][%d]\n", health_inv_state[0],health_inv_state[1],health_inv_state[2] );
     decrement_life_status();
     remove_dead_parts();
+    printf("a5-health_inv_life_status[%d][%d][%d]\n", health_inv_life_status[0],health_inv_life_status[1],health_inv_life_status[2] );
+    printf("a5-health_inv_state[%d][%d][%d]\n", health_inv_state[0],health_inv_state[1],health_inv_state[2] );
 }
 
 int main(
