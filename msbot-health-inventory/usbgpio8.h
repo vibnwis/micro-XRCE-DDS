@@ -18,7 +18,7 @@ extern "C"
 #include <unistd.h>
 
 // setup /dev/ttuACM0
-void setup_USBGPIO8(void);
+bool setup_USBGPIO8(void);
 
 bool set_gpio (uint8_t gpio_num);
 
@@ -30,6 +30,10 @@ bool gpio_mask_bit(uint8_t gpio_num);
 
 bool gpio_unmask_bit(uint8_t gpio_num);
 
+bool gpio_mask_all(void);
+
+bool gpio_unmask_all(void);
+
 bool iodir_gpio_output(uint8_t gpio_num);
 
 bool iodir_gpio_input(uint8_t gpio_num);
@@ -38,6 +42,7 @@ bool gpio_unmask_bits(uint8_t mask_pattern);
 
 bool gpio_mask_bits(uint8_t mask_pattern);
 
+bool remove_USBGPIO8(void);
 
 #ifdef __cplusplus
 }

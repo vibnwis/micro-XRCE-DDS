@@ -35,8 +35,6 @@ the Topic, so it can be useful to discretize among different topics.
 #include <stdbool.h>
 #include "usbgpio8.h"
 
-
-
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
 
