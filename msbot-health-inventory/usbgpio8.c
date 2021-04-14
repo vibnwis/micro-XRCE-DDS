@@ -16,33 +16,35 @@ int fd;
 
 int set_interface_attribs(int fd, int speed)
 {
-    struct termios tty;
+    struct termios tty;  /* Create the structure                          */
 
-    if (tcgetattr(fd, &tty) < 0) {
+    if (tcgetattr(fd, &tty) < 0) {  /* Get the current attributes of the Serial port */
         printf("Error from tcgetattr: %s\n", strerror(errno));
         return -1;
     }
 
+    /* Setting the Baud rate */
     cfsetospeed(&tty, (speed_t)speed);
     cfsetispeed(&tty, (speed_t)speed);
 
-    tty.c_cflag |= (CLOCAL | CREAD);    /* ignore modem controls */
-    tty.c_cflag &= ~CSIZE;
+    /* 8N1 Mode */
+    tty.c_cflag |= (CLOCAL | CREAD);    /*  Enable receiver, ignore modem controls */
+    tty.c_cflag &= ~CSIZE;      /* Clears the mask for setting the data size             */
     tty.c_cflag |= CS8;         /* 8-bit characters */
     tty.c_cflag &= ~PARENB;     /* no parity bit */
     tty.c_cflag &= ~CSTOPB;     /* only need 1 stop bit */
     tty.c_cflag &= ~CRTSCTS;    /* no hardware flowcontrol */
 
     /* setup for non-canonical mode */
-    tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-    tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON | IXOFF | IXANY);  /* Disable XON/XOFF flow control both i/p and o/p */
+    tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); /* Non Cannonical mode                            */
     tty.c_oflag &= ~OPOST;
 
     /* fetch bytes as they become available */
-    tty.c_cc[VMIN] = 1;
-    tty.c_cc[VTIME] = 1;
+    tty.c_cc[VMIN] = 1;  /* Read at least 1 characters */
+    tty.c_cc[VTIME] = 1; /* Wait 1ms , 0 = indefinitely */
 
-    if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+    if (tcsetattr(fd, TCSANOW, &tty) != 0) { /* Set the attributes to the termios structure*/
         printf("Error from tcsetattr: %s\n", strerror(errno));
         return -1;
     }
@@ -57,7 +59,10 @@ bool setup_USBGPIO8(void){
 
     //fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY | O_NDELAY);
 
-    fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
+    fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);  /* ttyUSB0 is the FT232 based USB2SERIAL Converter   */
+			   					/* O_RDWR   - Read/Write access to serial port       */
+								/* O_NOCTTY - No terminal will control the process   */
+								/* Open in blocking mode,read will wait              */
     if (fd < 0) {
         printf("Error opening %s: %s\n", portname, strerror(errno));
         return -1;
@@ -130,12 +135,13 @@ bool read_gpio(uint8_t gpio_num, uint8_t *result){
    char buf[255];
    uint8_t temp;
 
-   printf("read_gpio entered \n");
+   tcflush(fd, TCIFLUSH);   /* Discards old data in the rx buffer            */
+   printf("read_gpio  Discards old data in the rx buffer \n");
 
    if (gpio_num >= 0 && gpio_num <=7) {
 
         sprintf(numeto_command, "gpio read %d\r", gpio_num);
-        printf("numeto command %s \n", numeto_command);
+        printf(" numeto command %s \n", numeto_command);
 
         if (write(fd, numeto_command, strlen(numeto_command)) != strlen(numeto_command))
         {

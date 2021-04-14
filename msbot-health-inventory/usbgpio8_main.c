@@ -117,6 +117,8 @@ int main(int args,char** argv)
 
     bool toggle = true;
     write_gpio_output(toggle);
+    sleep(3);
+
     while(1) {
 
         read_gpio_input();
