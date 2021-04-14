@@ -24,7 +24,7 @@ bool set_gpio (uint8_t gpio_num);
 
 bool clear_gpio (uint8_t gpio_num);
 
-bool read_gpio(uint8_t gpio_num);
+bool read_gpio(uint8_t gpio_num, uint8_t *result);
 
 bool gpio_mask_bit(uint8_t gpio_num);
 

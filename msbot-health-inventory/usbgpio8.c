@@ -122,13 +122,13 @@ bool clear_gpio (uint8_t gpio_num){
     return status;
 }
 
-bool read_gpio(uint8_t gpio_num){
+bool read_gpio(uint8_t gpio_num, uint8_t *result){
 
    char numeto_command[80];
    bool status = false;
-   int res = 0;
+   int len = 0;
    char buf[255];
-   int temp;
+   uint8_t temp;
 
    printf("read_gpio entered \n");
 
@@ -144,16 +144,21 @@ bool read_gpio(uint8_t gpio_num){
         }
 
         printf("read_gpio write() succeeded \n");
-        if ((res = read(fd,buf,255)) > 0) {
-            temp = atoi(buf);
-            printf("result len = %d GPIO-%d = %d \n", res, gpio_num, temp);
+        if ((len = read(fd,buf,255)) > 0) {
+            buf[len] = '\0';
+            temp = buf[13] - '0';
+            *result = temp;
+            printf("result len = %d GPIO-%d = %d \n", len, gpio_num, temp);
             status = true;
         }
+#if 0
+        if (status){
 
-        if (status)
             printf("read_gpio read() succeeded buf=%s %d\n", buf, temp );
+        }
         else
             printf("read_gpio read() FAILED \n");
+#endif
     }
 
     return status;

@@ -12,44 +12,45 @@
 #include "usbgpio8.h"
 
 void read_gpio_input(void) {
+    uint8_t result = 0xff;
 
-    if (read_gpio(0))
-      printf("reading gpio 0 succeeded \n");
+    if (read_gpio(0, &result))
+      printf("reading gpio-0 succeeded %d \n", result);
 
-    if(read_gpio(1))
-        printf("reading gpio 1 succeeded \n");
+    if(read_gpio(1, &result))
+        printf("reading gpio-1 succeeded %d \n", result);
 
-    if(read_gpio(2))
-        printf("reading gpio 2 succeeded \n");
+    if(read_gpio(2, &result))
+        printf("reading gpio-2 succeeded %d \n", result);
 
-    if(read_gpio(3))
-        printf("reading gpio 3 succeeded \n");
+    if(read_gpio(3, &result))
+        printf("reading gpio-3 succeeded %d \n", result);
 }
 
 void write_gpio_output(bool sw_on) {
 
     if (sw_on) {
- //       if (set_gpio(4))
- //           printf("writing On gpio 4 succeeded \n");
+        if (set_gpio(4))
+            printf("writing On gpio 4 succeeded \n");
 
-  //      if(set_gpio(5))
-  //          printf("writing On  gpio 5 succeeded \n");
+        if(set_gpio(5))
+            printf("writing On  gpio 5 succeeded \n");
 
-  //      if(set_gpio(6))
-  //          printf("writing On  gpio 6 succeeded \n");
+        if(set_gpio(6))
+            printf("writing On  gpio 6 succeeded \n");
 
         if(set_gpio(7))
             printf("writing On  gpio 7 succeeded \n");
     }
     else {
-  //      if (clear_gpio(4))
-  //          printf("writing Off  gpio 4 succeeded \n");
+        if (clear_gpio(4))
+           printf("writing Off  gpio 4 succeeded \n");
 
-  //      if(clear_gpio(5))
-  //          printf("writing Off gpio 5 succeeded \n");
+        if(clear_gpio(5))
+            printf("writing Off gpio 5 succeeded \n");
 
-  //      if(clear_gpio(6))
-  //          printf("writing Off gpio 6 succeeded \n");
+        if(clear_gpio(6))
+            printf("writing Off gpio 6 succeeded \n");
 
         if(clear_gpio(7))
             printf("writing Off gpio 7 succeeded \n");
@@ -71,7 +72,7 @@ int main(int args,char** argv)
       printf("usbgpio setup  succeeded \n");
 
     gpio_unmask_all();
-#if 0
+#if 1
     status = false;
     //Set GPIO 0-3 input
     iodir_gpio_input(0);
@@ -115,11 +116,12 @@ int main(int args,char** argv)
       printf("iodir_gpio_output 7 setup  succeeded \n");
 
     bool toggle = true;
+    write_gpio_output(toggle);
     while(1) {
 
-        write_gpio_output(toggle);
+        read_gpio_input();
 
-        toggle = !toggle;
+     //   toggle = !toggle;
 
         printf("Sleeping for 6 seconds toggle=%d\n", toggle);
         sleep(6);
