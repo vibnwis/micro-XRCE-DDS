@@ -87,22 +87,6 @@ void on_reply(
 #endif /* ifdef WIN32 */
 }
 
-void read gpio_input(void) {
-
-    if (read_gpio(0))
-      printf("reading gpio 0 succeeded \n");
-
-    if(read_gpio(1))
-        printf("reading gpio 1 succeeded \n");;
-
-    if(read_gpio(2))
-        printf("reading gpio 2 succeeded \n");;
-
-    if(read_gpio(3))
-        printf("reading gpio 3 succeeded \n");;
-}
-
-
 
 
 int main(
@@ -172,25 +156,25 @@ int main(
 
     //-------- publisher and subscriber --------
 
-    uxrObjectId topic_id_1_1 = uxr_object_id(0x01, UXR_TOPIC_ID);
-    const char* topic_xml_1_1 = "<dds>"
-            "<topic>"
-            "<name>HelloWorldTopic_1_to_2</name>"
-            "<dataType>HelloWorld</dataType>"
-            "</topic>"
-            "</dds>";
-    uint16_t topic_req_1_1 = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id_1_1, participant_id,
-                    topic_xml_1_1, UXR_REPLACE);
-
-    uxrObjectId topic_id_1_2 = uxr_object_id(0x02, UXR_TOPIC_ID);
-    const char* topic_xml_1_2 = "<dds>"
+    uxrObjectId topic_id_2_1 = uxr_object_id(0x01, UXR_TOPIC_ID);
+    const char* topic_xml_2_1 = "<dds>"
             "<topic>"
             "<name>HelloWorldTopic_2_to_1</name>"
             "<dataType>HelloWorld</dataType>"
             "</topic>"
             "</dds>";
-    uint16_t topic_req_1_2 = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id_1_2, participant_id,
-                    topic_xml_1_2, UXR_REPLACE);
+    uint16_t topic_req_2_1 = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id_2_1, participant_id,
+                    topic_xml_2_1, UXR_REPLACE);
+
+    uxrObjectId topic_id_2_2 = uxr_object_id(0x02, UXR_TOPIC_ID);
+    const char* topic_xml_2_2 = "<dds>"
+            "<topic>"
+            "<name>HelloWorldTopic_1_to_2</name>"
+            "<dataType>HelloWorld</dataType>"
+            "</topic>"
+            "</dds>";
+    uint16_t topic_req_2_2 = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id_2_2, participant_id,
+                    topic_xml_2_2, UXR_REPLACE);
 
     uxrObjectId publisher_id = uxr_object_id(0x01, UXR_PUBLISHER_ID);
     const char* publisher_xml = "";
@@ -202,7 +186,7 @@ int main(
             "<data_writer>"
             "<topic>"
             "<kind>NO_KEY</kind>"
-            "<name>HelloWorldTopic_1_to_2</name>"
+            "<name>HelloWorldTopic_2_to_1</name>"
             "<dataType>HelloWorld</dataType>"
             "</topic>"
             "</data_writer>"
@@ -220,7 +204,7 @@ int main(
             "<data_reader>"
             "<topic>"
             "<kind>NO_KEY</kind>"
-            "<name>HelloWorldTopic_2_to_1</name>"
+            "<name>HelloWorldTopic_1_to_2</name>"
             "<dataType>HelloWorld</dataType>"
             "</topic>"
             "</data_reader>"
@@ -233,14 +217,14 @@ int main(
     // Send create entities message and wait its status
 
     uint16_t requests[] = {
-        participant_req, requester_req, topic_req_1_1, topic_req_1_2, publisher_req, datawriter_req, subscriber_req,
+        participant_req, requester_req, topic_req_2_1, topic_req_2_2, publisher_req, datawriter_req, subscriber_req,
         datareader_req
     };
-    uint8_t status[sizeof(requests) / 2];
+    uint8_t req_status[sizeof(requests) / 2];
 
-    if (!uxr_run_session_until_all_status(&session, 1000, requests, status, 2))
+    if (!uxr_run_session_until_all_status(&session, 1000, requests, req_status, 2))
     {
-        printf("Error at create entities: participant: %i requester: %i\n", status[0], status[1]);
+        printf("Error at create entities: participant: %i requester: %i\n", req_status[0], req_status[1]);
         return 1;
     }
 
@@ -303,10 +287,6 @@ int main(
     status = iodir_gpio_output(7);
     if (status)
       printf("iodir_gpio_output 7 setup  succeeded \n");
-
-    bool toggle = true;
-    write_gpio_output(toggle);
-    sleep(3);
 
     //Set GPIO 0-3 input
     iodir_gpio_input(0);

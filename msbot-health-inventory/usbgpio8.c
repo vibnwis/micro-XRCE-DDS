@@ -339,3 +339,35 @@ bool gpio_mask_bits(uint8_t mask_pattern){
 
     return status;
 }
+
+void write_gpio_output(bool sw_on) {
+
+    if (sw_on) {
+        if (set_gpio(4))
+            printf("writing On gpio 4 succeeded \n");
+
+        if(set_gpio(5))
+            printf("writing On  gpio 5 succeeded \n");
+
+        if(set_gpio(6))
+            printf("writing On  gpio 6 succeeded \n");
+
+        if(set_gpio(7))
+            printf("writing On  gpio 7 succeeded \n");
+    }
+    else {
+        if (clear_gpio(4))
+           printf("writing Off  gpio 4 succeeded \n");
+
+        if(clear_gpio(5))
+            printf("writing Off gpio 5 succeeded \n");
+
+        if(clear_gpio(6))
+            printf("writing Off gpio 6 succeeded \n");
+
+        if(clear_gpio(7))
+            printf("writing Off gpio 7 succeeded \n");
+
+    }
+}
+

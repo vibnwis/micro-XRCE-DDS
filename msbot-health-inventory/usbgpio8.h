@@ -44,6 +44,10 @@ bool gpio_mask_bits(uint8_t mask_pattern);
 
 bool remove_USBGPIO8(void);
 
+void write_gpio_output(bool sw_on);
+
+void read_gpio_input(void);
+
 #ifdef __cplusplus
 }
 #endif // ifdef __cplusplus

@@ -87,22 +87,6 @@ void on_reply(
 #endif /* ifdef WIN32 */
 }
 
-void read gpio_input(void) {
-
-    if (read_gpio(0))
-      printf("reading gpio 0 succeeded \n");
-
-    if(read_gpio(1))
-        printf("reading gpio 1 succeeded \n");;
-
-    if(read_gpio(2))
-        printf("reading gpio 2 succeeded \n");;
-
-    if(read_gpio(3))
-        printf("reading gpio 3 succeeded \n");;
-}
-
-
 
 
 int main(
@@ -236,11 +220,11 @@ int main(
         participant_req, requester_req, topic_req_1_1, topic_req_1_2, publisher_req, datawriter_req, subscriber_req,
         datareader_req
     };
-    uint8_t status[sizeof(requests) / 2];
+    uint8_t req_status[sizeof(requests) / 2];
 
-    if (!uxr_run_session_until_all_status(&session, 1000, requests, status, 2))
+    if (!uxr_run_session_until_all_status(&session, 1000, requests, req_status, 2))
     {
-        printf("Error at create entities: participant: %i requester: %i\n", status[0], status[1]);
+        printf("Error at create entities: participant: %i requester: %i\n", req_status[0], req_status[1]);
         return 1;
     }
 
@@ -266,6 +250,10 @@ int main(
     iodir_gpio_output(5);
     iodir_gpio_output(6);
     iodir_gpio_output(7);
+
+    bool toggle = true;
+    write_gpio_output(toggle);
+    sleep(3);
 
     // Write requests
     bool connected = true;

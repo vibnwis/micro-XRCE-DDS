@@ -1,1 +1,5 @@
 gcc uclient_AA_main.c HelloWorld.c usbgpio8.c -o uclient_AA_main -lmicrocdr -lmicroxrcedds_client
+
+gcc uclient_BB_main.c HelloWorld.c usbgpio8.c -o uclient_BB_main -lmicrocdr -lmicroxrcedds_client
+
+gcc uclient_CC_main.c HelloWorld.c usbgpio8.c -o uclient_CC_main -lmicrocdr -lmicroxrcedds_client
