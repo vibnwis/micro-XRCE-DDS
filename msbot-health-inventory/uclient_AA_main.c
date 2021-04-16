@@ -236,6 +236,9 @@ int main(
     uint16_t read_data_req = uxr_buffer_request_data(&session, reliable_out, requester_id, reliable_in,
                     &delivery_control);
 
+    uint16_t read_data_req_topic = uxr_buffer_request_data(&session, reliable_out, datareader_id, reliable_in,
+                    &delivery_control);
+
     // setup NUMATO USBGPIO8
     setup_USBGPIO8();
 
@@ -260,12 +263,23 @@ int main(
     uint32_t count = 0;
     while (connected)
     {
+       // Session 1 publication
+        HelloWorld topic = {
+            count, "Publisher A(1) says hello"
+        };
+
       //uint8_t request[32 * 3] = {
         char request[32 * 3] = {  /* 3 strings  of 32 chars long */
              0
         };
 
         ucdrBuffer ub;
+
+  //       ucdrBuffer ub_1;
+        uint32_t topic_size = HelloWorld_size_of_topic(&topic, 0);
+        uxr_prepare_output_stream(&session, reliable_out, datawriter_id, &ub, topic_size);
+        HelloWorld_serialize_topic(&ub, &topic);
+
 
         ucdr_init_buffer(&ub, request, sizeof(request));
     //    ucdr_serialize_uint32_t(&ub, count);
@@ -280,6 +294,8 @@ int main(
         uint16_t request_id = uxr_buffer_request(&session, reliable_out, requester_id, request, sizeof(request));
         //printf("Request sent: (%d + %d) [id: %d]\n", count, count, request_id);
         printf("Request sent: (%s + %s) [id: %d]\n", partname, localpartname, request_id);
+
+
         connected = uxr_run_session_time(&session, 1000);
 
         ++count;
