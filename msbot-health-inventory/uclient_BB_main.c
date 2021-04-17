@@ -41,6 +41,8 @@ the Topic, so it can be useful to discretize among different topics.
 char partname[] = "EFGH";
 char localpartname[] = "EFGH-local";
 char specifications[] = "5V";
+uint8_t gpio_num = 0;
+uint8_t old_gpio_num = 0;
 
 void on_topic(
         uxrSession* session,
@@ -56,10 +58,15 @@ void on_topic(
     HelloWorld topic;
     HelloWorld_deserialize_topic(ub, &topic);
 
+
     char key[20];
     snprintf(key, 20, "0x%X%X%X%X", session->info.key[0], session->info.key[1], session->info.key[2],
             session->info.key[3]);
-    printf("Session %s: %s (%i)\n", key, topic.message, topic.index);
+    old_gpio_num = gpio_num;
+    gpio_num = topic.message[23] - 48;
+    clear_gpio (old_gpio_num);
+    set_gpio (gpio_num);
+    printf("Session %s: %s (%i) gpio_num = %d\n", key, topic.message, topic.index, gpio_num);
 }
 
 void on_reply(
@@ -252,24 +259,24 @@ int main(
 #if 1
     status = false;
     //Set GPIO 0-3 input
-    iodir_gpio_input(0);
+    status = iodir_gpio_output(0);
     if (status)
-      printf("iodir_gpio_input 0 setup  succeeded \n");
+      printf("iodir_gpio_output 0 setup  succeeded \n");
 
     status = false;
-    status = iodir_gpio_input(1);
+    status = iodir_gpio_output(1);
     if (status)
-      printf("iodir_gpio_input 1 setup  succeeded \n");
+      printf("iodir_gpio_output 1 setup  succeeded \n");
 
     status = false;
-    status = iodir_gpio_input(2);
+    status = iodir_gpio_output(2);
     if (status)
-      printf("iodir_gpio_input 2 setup  succeeded \n");
+      printf("iodir_gpio_output 2 setup  succeeded \n");
 
     status = false;
-    status = iodir_gpio_input(3);
+    status = iodir_gpio_output(3);
     if (status)
-      printf("iodir_gpio_input 3 setup  succeeded \n");
+      printf("iodir_gpio_output 3 setup  succeeded \n");
 
      //Set GPIO 4-7 as output
      status = false;
@@ -292,31 +299,35 @@ int main(
     if (status)
       printf("iodir_gpio_output 7 setup  succeeded \n");
 
-    //Set GPIO 0-3 input
-    iodir_gpio_input(0);
-    iodir_gpio_input(1);
-    iodir_gpio_input(2);
-    iodir_gpio_input(3);
-
-     //Set GPIO 4-7 as output
-    iodir_gpio_output(4);
-    iodir_gpio_output(5);
-    iodir_gpio_output(6);
-    iodir_gpio_output(7);
-
-    bool toggle = true;
-    write_gpio_output(toggle);
+    write_gpio_output(false);
     sleep(3);
 
     // Write requests
     bool connected = true;
     uint32_t count = 0;
+
+    uint8_t result = 0xff;
+
+    HelloWorld topic;
+
     while (connected)
     {
+
+          // read gpio-3
+        strcpy(topic.message, "Publisher B(2) says hello");
+        result = 0xff;
+
+        if (read_gpio(3, &result)) {
+            sprintf(topic.message, "Publisher B(2) gpio-3 = %d", result);
+            printf("publisher is str%s\n", topic.message);
+        }
+
+        topic.index = count;
+
         // Session 1 publication
-        HelloWorld topic = {
-            count, "Publisher B(2) says hello"
-        };
+  //      HelloWorld topic = {
+   //         count, publish_str
+   //     };
 
       //uint8_t request[32 * 3] = {
         char request[32 * 3] = {  /* 3 strings  of 32 chars long */

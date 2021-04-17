@@ -33,7 +33,8 @@ the Topic, so it can be useful to discretize among different topics.
 #include <errno.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include "usbgpio8.h"
+#include <time.h>
+
 
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
@@ -55,6 +56,7 @@ void on_topic(
 
     HelloWorld topic;
     HelloWorld_deserialize_topic(ub, &topic);
+
 
     char key[20];
     snprintf(key, 20, "0x%X%X%X%X", session->info.key[0], session->info.key[1], session->info.key[2],
@@ -239,34 +241,26 @@ int main(
     uint16_t read_data_req_topic = uxr_buffer_request_data(&session, reliable_out, datareader_id, reliable_in,
                     &delivery_control);
 
-    // setup NUMATO USBGPIO8
-    setup_USBGPIO8();
+   time_t t;
 
-    //Set GPIO 0-3 input
-    iodir_gpio_input(0);
-    iodir_gpio_input(1);
-    iodir_gpio_input(2);
-    iodir_gpio_input(3);
-
-     //Set GPIO 4-7 as output
-    iodir_gpio_output(4);
-    iodir_gpio_output(5);
-    iodir_gpio_output(6);
-    iodir_gpio_output(7);
-
-    bool toggle = true;
-    write_gpio_output(toggle);
-    sleep(3);
+   /* Intializes random number generator */
+   srand((unsigned) time(&t));
 
     // Write requests
     bool connected = true;
     uint32_t count = 0;
+
+    HelloWorld topic;
+
     while (connected)
     {
-       // Session 1 publication
-        HelloWorld topic = {
-            count, "Publisher A(1) says hello"
-        };
+
+
+       //Update publishing message
+       sprintf(topic.message, "Publisher A(1) turn-on %d", rand() % 8);
+       printf("Updated messsage is \"%s\"\n", topic.message);
+
+       topic.index = count;
 
       //uint8_t request[32 * 3] = {
         char request[32 * 3] = {  /* 3 strings  of 32 chars long */
@@ -301,6 +295,6 @@ int main(
         ++count;
     }
 
-    remove_USBGPIO8();
+
     return 0;
 }

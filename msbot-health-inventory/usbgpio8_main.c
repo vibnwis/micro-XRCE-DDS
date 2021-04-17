@@ -27,36 +27,6 @@ void read_gpio_input(void) {
         printf("reading gpio-3 succeeded %d \n", result);
 }
 
-void write_gpio_output(bool sw_on) {
-
-    if (sw_on) {
-        if (set_gpio(4))
-            printf("writing On gpio 4 succeeded \n");
-
-        if(set_gpio(5))
-            printf("writing On  gpio 5 succeeded \n");
-
-        if(set_gpio(6))
-            printf("writing On  gpio 6 succeeded \n");
-
-        if(set_gpio(7))
-            printf("writing On  gpio 7 succeeded \n");
-    }
-    else {
-        if (clear_gpio(4))
-           printf("writing Off  gpio 4 succeeded \n");
-
-        if(clear_gpio(5))
-            printf("writing Off gpio 5 succeeded \n");
-
-        if(clear_gpio(6))
-            printf("writing Off gpio 6 succeeded \n");
-
-        if(clear_gpio(7))
-            printf("writing Off gpio 7 succeeded \n");
-
-    }
-}
 
 
 int main(int args,char** argv)
@@ -65,8 +35,6 @@ int main(int args,char** argv)
     bool status = false;
 // setup NUMATO USBGPIO8
     status=setup_USBGPIO8();
-
-
 
     if (status)
       printf("usbgpio setup  succeeded \n");
