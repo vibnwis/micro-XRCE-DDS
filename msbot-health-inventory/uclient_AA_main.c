@@ -171,7 +171,7 @@ int main(
     uxrObjectId topic_id_1_2 = uxr_object_id(0x02, UXR_TOPIC_ID);
     const char* topic_xml_1_2 = "<dds>"
             "<topic>"
-            "<name>HelloWorldTopic_2_to_1</name>"
+            "<name>HelloWorldTopic_3_to_1</name>"
             "<dataType>HelloWorld</dataType>"
             "</topic>"
             "</dds>";
@@ -206,7 +206,7 @@ int main(
             "<data_reader>"
             "<topic>"
             "<kind>NO_KEY</kind>"
-            "<name>HelloWorldTopic_2_to_1</name>"
+            "<name>HelloWorldTopic_3_to_1</name>"
             "<dataType>HelloWorld</dataType>"
             "</topic>"
             "</data_reader>"
