@@ -103,7 +103,10 @@ int main(
 
     char* ip = argv[1];
     char* port = argv[2];
-    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xAAAABBBB;
+    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xAAAAAAAA;
+
+    // State -- master topic
+    uint32_t count = 0;
 
     // Transport
     uxrUDPTransport transport;
@@ -118,6 +121,7 @@ int main(
     uxr_init_session(&session, &transport.comm, key);
     uxr_set_reply_callback(&session, on_reply, false);
     uxr_set_topic_callback(&session, on_topic, NULL);
+
     if (!uxr_create_session(&session))
     {
         printf("Error at init session.\n");
@@ -157,6 +161,8 @@ int main(
                     requester_xml, UXR_REPLACE);
 
     //-------- publisher and subscriber --------
+
+
 
     uxrObjectId topic_id_1_1 = uxr_object_id(0x01, UXR_TOPIC_ID);
     const char* topic_xml_1_1 = "<dds>"
@@ -248,7 +254,8 @@ int main(
 
     // Write requests
     bool connected = true;
-    uint32_t count = 0;
+    uint32_t requester_count = 0;
+
 
     HelloWorld topic;
 
@@ -260,7 +267,7 @@ int main(
        sprintf(topic.message, "Publisher A(1) turn-on %d", rand() % 8);
        printf("Updated messsage is \"%s\"\n", topic.message);
 
-       topic.index = count;
+       topic.index = requester_count;
 
       //uint8_t request[32 * 3] = {
         char request[32 * 3] = {  /* 3 strings  of 32 chars long */
@@ -269,18 +276,11 @@ int main(
 
         ucdrBuffer ub;
 
-  //       ucdrBuffer ub_1;
         uint32_t topic_size = HelloWorld_size_of_topic(&topic, 0);
         uxr_prepare_output_stream(&session, reliable_out, datawriter_id, &ub, topic_size);
         HelloWorld_serialize_topic(&ub, &topic);
 
-
         ucdr_init_buffer(&ub, request, sizeof(request));
-    //    ucdr_serialize_uint32_t(&ub, count);
-    //    ucdr_serialize_uint32_t(&ub, count);
-
-    //    ucdr_serialize_uint32_t(&ub, &partname);
-    //    ucdr_serialize_uint32_t(&ub, &localpartname);
 
         ucdr_serialize_string(&ub, partname);
         ucdr_serialize_string(&ub, localpartname);
@@ -289,10 +289,9 @@ int main(
         //printf("Request sent: (%d + %d) [id: %d]\n", count, count, request_id);
         printf("Request sent: (%s + %s) [id: %d]\n", partname, localpartname, request_id);
 
-
         connected = uxr_run_session_time(&session, 1000);
 
-        ++count;
+        ++requester_count;
     }
 
 

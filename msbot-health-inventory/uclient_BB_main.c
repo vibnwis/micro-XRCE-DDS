@@ -108,7 +108,7 @@ int main(
 
     char* ip = argv[1];
     char* port = argv[2];
-    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xCCCCEEEE;
+    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xBBBBBBBB;
 
     // Transport
     uxrUDPTransport transport;
@@ -319,7 +319,7 @@ int main(
 
         if (read_gpio(3, &result)) {
             sprintf(topic.message, "Publisher B(2) gpio-3 = %d", result);
-            printf("publisher is str%s\n", topic.message);
+            printf("publisher is str %s\n", topic.message);
         }
 
         topic.index = count;

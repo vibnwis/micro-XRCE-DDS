@@ -103,7 +103,7 @@ int main(
 
     char* ip = argv[1];
     char* port = argv[2];
-    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xEEEEFFFF;
+    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xCCCCCCCC;
 
     // Transport
     uxrUDPTransport transport;
