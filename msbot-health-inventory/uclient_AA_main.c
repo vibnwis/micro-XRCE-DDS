@@ -19,6 +19,7 @@ the request_id. The id of the object_id corresponds to the DataReader that has r
 the Topic, so it can be useful to discretize among different topics.
 */
 #include "HelloWorld.h"
+#include "msbot_master.h"
 
 #include <uxr/client/client.h>
 
@@ -39,6 +40,12 @@ the Topic, so it can be useful to discretize among different topics.
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
 
+ uxrObjectId datareader_id_mas;
+ uxrObjectId datareader_id;
+
+ uint16_t read_data_req_mas;
+ uint16_t read_data_req_topic;
+
 char partname[] = "ABCD";
 char localpartname[] = "ABCD-local";
 char specifications[] = "5V";
@@ -54,14 +61,26 @@ void on_topic(
 {
     (void) session; (void) object_id; (void) request_id; (void) stream_id; (void) length;
 
-    HelloWorld topic;
-    HelloWorld_deserialize_topic(ub, &topic);
+    printf("Received object_id: %d, request_id: %d\n", object_id.id, request_id);
+    if ((object_id.id == datareader_id_mas.id) && (request_id==read_data_req_mas)) { //mas_topic
+   // HelloWorld topic;
+   // HelloWorld_deserialize_topic(ub, &topic);
+        msbot_master topic;
+        msbot_master_deserialize_topic(ub, &topic);
 
+        printf("Received topic: %s, %s, %s, %s, %s, id: %i\n", topic.message, topic.name, topic.id, topic.dof, topic.make, topic.index);
 
-    char key[20];
-    snprintf(key, 20, "0x%X%X%X%X", session->info.key[0], session->info.key[1], session->info.key[2],
+    }
+    else if  ((object_id.id == datareader_id.id) && (request_id==read_data_req_topic)) {
+        HelloWorld topic;
+        HelloWorld_deserialize_topic(ub, &topic);
+        char key[20];
+        snprintf(key, 20, "0x%X%X%X%X", session->info.key[0], session->info.key[1], session->info.key[2],
             session->info.key[3]);
-    printf("Session %s: %s (%i)\n", key, topic.message, topic.index);
+        printf("Session %s: %s (%i)\n", key, topic.message, topic.index);
+        //uint32_t* count_ptr = (uint32_t*) args;
+        //(*count_ptr)++;
+    }
 }
 
 void on_reply(
@@ -163,7 +182,6 @@ int main(
     //-------- publisher and subscriber --------
 
 
-
     uxrObjectId topic_id_1_1 = uxr_object_id(0x01, UXR_TOPIC_ID);
     const char* topic_xml_1_1 = "<dds>"
             "<topic>"
@@ -207,7 +225,7 @@ int main(
     uint16_t subscriber_req = uxr_buffer_create_subscriber_xml(&session, reliable_out, subscriber_id,
                     participant_id, subscriber_xml, UXR_REPLACE);
 
-    uxrObjectId datareader_id = uxr_object_id(0x01, UXR_DATAREADER_ID);
+    datareader_id = uxr_object_id(0x01, UXR_DATAREADER_ID);
     const char* datareader_xml = "<dds>"
             "<data_reader>"
             "<topic>"
@@ -220,13 +238,43 @@ int main(
     uint16_t datareader_req = uxr_buffer_create_datareader_xml(&session, reliable_out, datareader_id,
                     subscriber_id, datareader_xml, UXR_REPLACE);
 
+    //----------2nd subscriber -------------
+    uxrObjectId topic_id_mas = uxr_object_id(0x02, UXR_TOPIC_ID);
+    const char* topic_xml_mas = "<dds>"
+            "<topic>"
+            "<name>msbot_masterTopic</name>"
+            "<dataType>msbot_master</dataType>"
+            "</topic>"
+            "</dds>";
+    uint16_t topic_req_mas = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id_mas, participant_id, topic_xml_mas,
+                    UXR_REPLACE);
+
+    uxrObjectId subscriber_id_mas = uxr_object_id(0x02, UXR_SUBSCRIBER_ID);
+    const char* subscriber_xml_mas = "";
+    uint16_t subscriber_req_mas = uxr_buffer_create_subscriber_xml(&session, reliable_out, subscriber_id_mas, participant_id,
+                    subscriber_xml_mas, UXR_REPLACE);
+
+    datareader_id_mas = uxr_object_id(0x02, UXR_DATAREADER_ID);
+    const char* datareader_xml_mas = "<dds>"
+            "<data_reader>"
+            "<topic>"
+            "<kind>NO_KEY</kind>"
+            "<name>msbot_masterTopic</name>"
+            "<dataType>msbot_master</dataType>"
+            "</topic>"
+            "</data_reader>"
+            "</dds>";
+    uint16_t datareader_req_mas = uxr_buffer_create_datareader_xml(&session, reliable_out, datareader_id_mas, subscriber_id_mas,
+                    datareader_xml_mas, UXR_REPLACE);
+
+
     //---------- end PnS -------------------
 
     // Send create entities message and wait its status
 
     uint16_t requests[] = {
-        participant_req, requester_req, topic_req_1_1, topic_req_1_2, publisher_req, datawriter_req, subscriber_req,
-        datareader_req
+        participant_req, requester_req, topic_req_1_1, topic_req_1_2, topic_req_mas , publisher_req, datawriter_req, subscriber_req,
+        datareader_req, subscriber_req_mas, datareader_req_mas
     };
     uint8_t req_status[sizeof(requests) / 2];
 
@@ -244,9 +292,21 @@ int main(
     uint16_t read_data_req = uxr_buffer_request_data(&session, reliable_out, requester_id, reliable_in,
                     &delivery_control);
 
-    uint16_t read_data_req_topic = uxr_buffer_request_data(&session, reliable_out, datareader_id, reliable_in,
+    read_data_req_topic = uxr_buffer_request_data(&session, reliable_out, datareader_id, reliable_in,
                     &delivery_control);
 
+    read_data_req_mas = uxr_buffer_request_data(&session, reliable_out, datareader_id_mas, reliable_in,
+                    &delivery_control);
+#if 0
+                        // Read topics
+    if (!uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req, &read_data_status, 1))
+    {
+        printf("Error at create entities: participant: %i topic: %i subscriber: %i datareader: %i\n", req_status[0],
+                req_status[1], req_status[2], req_status[3]);
+        return 1;
+    }
+
+#endif
    time_t t;
 
    /* Intializes random number generator */

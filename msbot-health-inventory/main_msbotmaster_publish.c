@@ -49,7 +49,7 @@ int main(
 
     // Session
     uxrSession session;
-    uxr_init_session(&session, &transport.comm, 0xAAAABBBB);
+    uxr_init_session(&session, &transport.comm, 0xCDCDCDCD);
     if (!uxr_create_session(&session))
     {
         printf("Error at create session.\n");

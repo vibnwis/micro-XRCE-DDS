@@ -265,7 +265,7 @@ int main(
 
     char* ip = argv[1];
     char* port = argv[2];
-    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xCCCCDDDD;
+    uint32_t key = (args == 4) ? (uint32_t)atoi(argv[3]) : 0xEFEFEFEF;
 
     // Transport
     uxrUDPTransport transport;

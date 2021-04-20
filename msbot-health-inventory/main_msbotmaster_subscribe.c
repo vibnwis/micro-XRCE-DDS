@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "msbot_master.h"
+// #inlude "HelloWorld.h"
 
 #include <uxr/client/client.h>
 
@@ -22,6 +23,9 @@
 
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
+
+ uxrObjectId datareader_id_1;
+ uxrObjectId datareader_id;
 
 void on_topic(
         uxrSession* session,
@@ -34,14 +38,52 @@ void on_topic(
 {
     (void) session; (void) object_id; (void) request_id; (void) stream_id; (void) length;
 
-    msbot_master topic;
-    msbot_master_deserialize_topic(ub, &topic);
 
-    printf("Received topic: %s, %s, %s, %s, %s, id: %i\n", topic.message, topic.name, topic.id, topic.dof, topic.make, topic.index);
+
+    if (object_id.id == datareader_id_1.id) { //mas_topic
+        msbot_master topic;
+        msbot_master_deserialize_topic(ub, &topic);
+      printf("Received topic: %s, %s, %s, %s, %s, id: %i\n", topic.message, topic.name, topic.id, topic.dof, topic.make, topic.index);
+
+    }
+#if 0
+    else if (object_id.id == datareader_id.id){  //helloworld topic
+       HelloWorld topic;
+        HelloWorld_deserialize_topic(ub, &topic);
+
+        printf("Received topic: %s, id: %i\n", topic.message, topic.index);
+
+        uint32_t* count_ptr = (uint32_t*) args;
+        (*count_ptr)++;
+    }
+
+#endif
+
+//    uint32_t* count_ptr = (uint32_t*) args;
+//    (*count_ptr)++;
+}
+#if 0
+void on_topic_1(
+        uxrSession* session,
+        uxrObjectId object_id,
+        uint16_t request_id,
+        uxrStreamId stream_id,
+        struct ucdrBuffer* ub,
+        uint16_t length,
+        void* args)
+{
+    (void) session; (void) object_id; (void) request_id; (void) stream_id; (void) length;
+
+    HelloWorld topic;
+    HelloWorld_deserialize_topic(ub, &topic);
+
+    printf("Received topic: %s, id: %i\n", topic.message, topic.index);
 
     uint32_t* count_ptr = (uint32_t*) args;
     (*count_ptr)++;
 }
+
+#endif // 0
 
 int main(
         int args,
@@ -73,6 +115,7 @@ int main(
     uxrSession session;
     uxr_init_session(&session, &transport.comm, 0xCCCCDDDD);
     uxr_set_topic_callback(&session, on_topic, &count);
+ //   uxr_set_topic_callback(&session, on_topic_1, &count);
     if (!uxr_create_session(&session))
     {
         printf("Error at create session.\n");
@@ -110,12 +153,13 @@ int main(
     uint16_t topic_req = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id, participant_id, topic_xml,
                     UXR_REPLACE);
 
+    // uxrObjectId subscriber_id = uxr_object_id(0x01, UXR_SUBSCRIBER_ID);
     uxrObjectId subscriber_id = uxr_object_id(0x01, UXR_SUBSCRIBER_ID);
     const char* subscriber_xml = "";
     uint16_t subscriber_req = uxr_buffer_create_subscriber_xml(&session, reliable_out, subscriber_id, participant_id,
                     subscriber_xml, UXR_REPLACE);
 
-    uxrObjectId datareader_id = uxr_object_id(0x01, UXR_DATAREADER_ID);
+    datareader_id = uxr_object_id(0x01, UXR_DATAREADER_ID);
     const char* datareader_xml = "<dds>"
             "<data_reader>"
             "<topic>"
@@ -127,13 +171,45 @@ int main(
             "</dds>";
     uint16_t datareader_req = uxr_buffer_create_datareader_xml(&session, reliable_out, datareader_id, subscriber_id,
                     datareader_xml, UXR_REPLACE);
-
+#if 0
     // Send create entities message and wait its status
+
+    uxrObjectId topic_id_1 = uxr_object_id(0x01, UXR_TOPIC_ID);
+    const char* topic_xml_1 = "<dds>"
+            "<topic>"
+            "<name>HelloWorldTopic</name>"
+            "<dataType>HelloWorld</dataType>"
+            "</topic>"
+            "</dds>";
+    uint16_t topic_req_1 = uxr_buffer_create_topic_xml(&session, reliable_out, topic_id_1, participant_id, topic_xml_1,
+                    UXR_REPLACE);
+
+    uxrObjectId subscriber_id_1 = uxr_object_id(0x01, UXR_SUBSCRIBER_ID);
+    const char* subscriber_xml_1 = "";
+    uint16_t subscriber_req_1 = uxr_buffer_create_subscriber_xml(&session, reliable_out, subscriber_id_1, participant_id,
+                    subscriber_xml_1, UXR_REPLACE);
+
+    datareader_id_1 = uxr_object_id(0x01, UXR_DATAREADER_ID);
+    const char* datareader_xml_1 = "<dds>"
+            "<data_reader>"
+            "<topic>"
+            "<kind>NO_KEY</kind>"
+            "<name>HelloWorldTopic</name>"
+            "<dataType>HelloWorld</dataType>"
+            "</topic>"
+            "</data_reader>"
+            "</dds>";
+    uint16_t datareader_req_1 = uxr_buffer_create_datareader_xml(&session, reliable_out, datareader_id_1, subscriber_id_1,
+                    datareader_xml_1, UXR_REPLACE);
+#endif
+      // Send create entities message and wait its status
     uint8_t status[4];
     uint16_t requests[4] = {
+        // participant_req, topic_req, subscriber_req, datareader_req,topic_req_1, subscriber_req_1, datareader_req_1
         participant_req, topic_req, subscriber_req, datareader_req
     };
-    if (!uxr_run_session_until_all_status(&session, 1000, requests, status, 4))
+
+    if (!uxr_run_session_until_all_status(&session, 1000, requests, status, 7))
     {
         printf("Error at create entities: participant: %i topic: %i subscriber: %i datareader: %i\n", status[0],
                 status[1], status[2], status[3]);
@@ -148,12 +224,24 @@ int main(
     uint16_t read_data_req = uxr_buffer_request_data(&session, reliable_out, datareader_id, reliable_in,
                     &delivery_control);
 
+  //   uint16_t read_data_req_1 = uxr_buffer_request_data(&session, reliable_out, datareader_id_1, reliable_in,
+  //                  &delivery_control);
+
+
     // Read topics
     bool connected = true;
+//    uint8_t read_data_status;
+ //   connected = uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req, &read_data_status, 1);
+ //   connected &= uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req_1, &read_data_status, 1);
+
     while (connected && count < max_topics)
     {
+
         uint8_t read_data_status;
-        connected = uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req, &read_data_status, 1);
+    connected = uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req, &read_data_status, 1);
+//    connected &= uxr_run_session_until_all_status(&session, UXR_TIMEOUT_INF, &read_data_req_1, &read_data_status, 1);
+
+        //connected = uxr_run_session_time(&session, 1000);
     }
 
     // Delete resources
